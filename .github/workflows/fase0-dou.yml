@@ -1,0 +1,33 @@
+name: fase0-dou
+
+on:
+  workflow_dispatch:
+    inputs:
+      data:
+        description: "Data DD-MM-AAAA (vazio = hoje, horário de Brasília)"
+        required: false
+      secao:
+        description: "Seção do DOU (do1, do2, do3)"
+        default: do1
+
+permissions:
+  contents: read
+
+jobs:
+  coletar:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Coletar e filtrar o DOU
+        run: |
+          python scripts/dou_fetch.py --secao "${{ inputs.secao }}" ${{ inputs.data && format('--data {0}', inputs.data) || '' }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dou-saida
+          path: out/
+          retention-days: 7
